@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amortized and Aggregate Analysis Visualizer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    header {
+      margin: 20px 0;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .controls {
+      margin-bottom: 20px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .controls button {
+      margin: 10px 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #3498db;
+      color: white;
+    }
+
+    .controls input {
+      padding: 10px;
+      margin: 10px 5px;
+      font-size: 16px;
+      width: 200px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+
+    .controls label {
+      font-size: 16px;
+      margin-right: 10px;
+    }
+
+    #chart-container {
+      margin-top: 20px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #insertion-details {
+      margin-top: 20px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    #stats {
+      margin-top: 20px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    #visualization-intro {
+      text-align: left;
+      margin-bottom: 15px;
+      max-width: 700px;
+    }
+
+    #analysis-theory {
+      text-align: left;
+      margin-top: 40px;
+      max-width: 700px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Amortized and Aggregate Analysis Visualizer</h1>
+  </header>
+
+  <div id="visualization-intro">
+    <p>
+      This tool simulates a sequence of insertions into a dynamic array, visualizing how the cost of operations changes as the array grows.
+      The visualization distinguishes between:
+    </p>
+    <ul>
+      <li><strong style="color: #3498db;">Blue bars:</strong> represent the cost of standard insertions (cost = 1), where the array does not need resizing.</li>
+      <li><strong style="color: #ff5733;">Red bars:</strong> indicate insertions that trigger an array resize, resulting in higher costs due to the array expansion.</li>
+    </ul>
+  </div>
+
+  <main>
+    <div class="controls">
+      <button id="start-button">Simulate Insertions</button>
+      <br><br>
+      <label for="operation-limit">Enter Number of Insertions:</label>
+      <input type="number" id="operation-limit" value="50" min="1">
+    </div>
+
+    <div id="chart-container">
+      <canvas id="cost-chart"></canvas>
+    </div>
+
+    <div id="insertion-details"></div>
+
+    <div id="stats">
+      <div>Total Cost: <span id="total-cost">0</span></div>
+      <div>Capacity Updated: <span id="capacity-updated">0</span></div>
+    </div>
+
+    <div id="analysis-theory">
+      <h2>Analysis Summary for Dynamic Array Resizing</h2>
+      <p>
+        In this simulation, each insertion has a cost of 1 under normal conditions. However, when the array reaches capacity, it doubles in size to accommodate more elements, leading to a resizing cost. Here’s a breakdown specific to this resizing case:
+      </p>
+      <ul>
+        <li><strong>Amortized Analysis:</strong> For each insertion, we observe that the cost of resizing (doubling the array) grows proportionally to the current array size. This means a single resizing operation can be expensive. However, since the array doubles each time, the frequency of these resizing operations decreases as the array size grows. Thus, the average cost per insertion stabilizes around a constant time complexity, O(1), because the large costs of resizing are "amortized" over the many inexpensive insertions in between.</li>
+        <li><strong>Aggregate Analysis:</strong> In this case, the total cost of n insertions, including all resizing operations, can be shown to be proportional to O(n). Although each resize operation costs more, it occurs less frequently as the array grows. The total cost divided by the number of insertions gives an average cost of O(1) per insertion, confirming that the average efficiency remains stable as the number of insertions increases.</li>
+      </ul>
+      <p>This analysis illustrates that dynamic array resizing provides efficient insertion operations on average, despite occasional higher-cost resizing steps.</p>
+    </div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('cost-chart');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 800;
+    canvas.height = 400;
+
+    let array = [];
+    let costs = [];
+    let maxCapacity = 1;
+    let totalOperations = 50;
+    let totalCost = 0;
+    let capacityUpdated = 0;
+    let isSimulating = false;
+    let simulationSpeed = 500;
+
+    function drawChart() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const barWidth = canvas.width / costs.length;
+      const maxCost = Math.max(...costs);
+
+      costs.forEach((cost, index) => {
+        const barHeight = (cost / maxCost) * canvas.height;
+        ctx.fillStyle = cost > 1 ? '#ff5733' : '#3498db';
+        ctx.fillRect(index * barWidth, canvas.height - barHeight, barWidth, barHeight);
+      });
+    }
+
+    function simulateInsertions() {
+      document.getElementById("analysis-theory").style.display = "none";
+      document.getElementById("insertion-details").innerHTML = '';
+      totalOperations = parseInt(document.getElementById('operation-limit').value);
+
+      array = [];
+      costs = [];
+      maxCapacity = 1;
+      totalCost = 0;
+      capacityUpdated = 0;
+
+      let i = 0;
+      isSimulating = true;
+
+      const insertionDetailsElement = document.getElementById('insertion-details');
+      const totalCostElement = document.getElementById('total-cost');
+      const capacityUpdatedElement = document.getElementById('capacity-updated');
+
+      function performInsertion() {
+        if (i >= totalOperations) {
+          isSimulating = false;
+          document.getElementById("analysis-theory").style.display = "block";
+          return;
+        }
+
+        let cost = 1;
+        if (array.length >= maxCapacity) {
+          maxCapacity *= 2;
+          cost = array.length + 1;
+          capacityUpdated++;
+        }
+        array.push(i);
+        costs.push(cost);
+        totalCost += cost;
+
+        drawChart();
+
+        const detailsText = `Insertion ${i + 1}: Cost = ${cost}`;
+        insertionDetailsElement.innerHTML = detailsText;
+        totalCostElement.innerHTML = totalCost;
+        capacityUpdatedElement.innerHTML = capacityUpdated;
+
+        i++;
+
+        if (simulationSpeed > 100) {
+          simulationSpeed -= 10;
+        }
+
+        setTimeout(performInsertion, simulationSpeed);
+      }
+
+      performInsertion();
+    }
+
+    document.getElementById('start-button').addEventListener('click', simulateInsertions);
+  </script>
+</body>
+</html>

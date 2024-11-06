@@ -1,0 +1,60 @@
+/* Ensure chart container has enough space for the canvas and text */
+#chart-container {
+  width: 100%;  /* Make container width 100% of its parent */
+  height: 400px;  /* Set height for canvas */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f4f4; /* Background for the canvas */
+}
+
+canvas {
+  width: 800px;  /* Fixed width to maintain aspect ratio */
+  height: 400px;  /* Fixed height to maintain aspect ratio */
+  border: 1px solid #ccc;  /* Border around the chart */
+}
+
+/* Button and controls styling */
+.controls {
+  margin: 20px;
+  display: flex;  /* Align elements in a row */
+  justify-content: center;
+  align-items: center;  /* Vertically align the items */
+  gap: 20px;  /* Adjust this value to control the gap between the button and text */
+}
+
+/* Button styling */
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+/* Input field for operation limit */
+#operation-limit {
+  padding: 5px 10px;
+  font-size: 16px;
+  width: 70px; /* Adjust the width of the input box if necessary */
+}
+
+/* Style for displaying insertion details outside the chart */
+#insertion-details {
+  margin-top: 20px;
+  padding: 10px;
+  text-align: center;
+}
+
+/* Style for individual insertion details */
+.insertion-detail {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 5px;
+}
